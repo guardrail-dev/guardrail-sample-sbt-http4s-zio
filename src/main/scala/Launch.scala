@@ -115,25 +115,24 @@ object App extends App {
       ).merge
     }
 
-  val serveForever: RIO[repository.Repository, Nothing] = {
+  def serveForever[R](httpRoutes: org.http4s.HttpRoutes[RIO[R, *]]): RIO[R, Nothing] = {
     import zio.interop.catz._
     import zio.interop.catz.implicits._
 
     import org.http4s.HttpRoutes
     import org.http4s.implicits._
     import org.http4s.server.blaze.BlazeServerBuilder
-    type Z[A] = RIO[repository.Repository, A]
 
-    ZIO.runtime[repository.Repository].flatMap { implicit r: Runtime[repository.Repository] =>
+    type Z[A] = RIO[R, A]
+
+    ZIO.runtime[R].flatMap { implicit r: Runtime[R] =>
       for {
-        storeResource <- makeStoreResource
-        // This is quite unpleasant.
-        // When using stable types, `Z` in this case, implicits resolve just fine, and we can use `.orNotFound` below.
-        // When using kind-projector, however, as in `HttpRoutes[RIO[repository.Repository, *]]`, resolution goes out
-        // the window and nothing can resolve unless explicitly pinned.
-        storeRoutes = storeResource.routes(handler): HttpRoutes[Z]
         res <- bindServer(
-          storeRoutes.orNotFound
+          // This is quite unpleasant.
+          // When using stable types, `Z` in this case, implicits resolve just fine, and we can use `.orNotFound` below.
+          // When using kind-projector, however, as in `HttpRoutes[RIO[R, *]]`, resolution goes out
+          // the window and nothing can resolve unless explicitly pinned.
+          (httpRoutes: HttpRoutes[Z]).orNotFound
         ).use(_ => ZIO.never)
       } yield res
     }
@@ -152,7 +151,10 @@ object App extends App {
 
     val inventoryLayer = Ref.make(initialInventory).toManaged_.toLayer
     val ordersLayer = Ref.make(initialOrders).toManaged_.toLayer
-    serveForever
+    (for {
+      storeResource <- makeStoreResource
+      res <- serveForever(storeResource.routes(handler))
+    } yield res)
       .exitCode
       .provideSomeLayer[ZEnv]((inventoryLayer ++ ordersLayer) >>> repository.Repository.inMemory)
   }

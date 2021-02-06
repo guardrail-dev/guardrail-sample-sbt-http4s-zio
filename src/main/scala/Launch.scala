@@ -1,8 +1,6 @@
 package example
 
-import example.server.store._
 import zio._
-import cats.effect.Timer
 
 object App extends App {
 
@@ -21,6 +19,7 @@ object App extends App {
    */
   val handler: server.store.StoreHandler[RIO[repository.Repository, *]] =
     new server.store.StoreHandler[RIO[repository.Repository, *]] {
+      import example.server.store._
 
       /**
        * getInventory

@@ -5,6 +5,13 @@ import zio._
 
 package object repository {
   type Repository = Has[Repository.Service]
+
+  /**
+   * RepositoryError
+   *
+   * Represent a kind of tree where we have the choice to stay within a single functions'
+   * error domain, or let variance widen all the way to the top.
+   */
   sealed trait RepositoryError
 
   sealed trait GetInventoryError extends RepositoryError
@@ -19,6 +26,9 @@ package object repository {
   final case class UnknownOrder(id: Long) extends GetOrderError with DeleteOrderError
   final case class AlreadyDeleted(id: Long) extends DeleteOrderError
 
+  /**
+   * Accessor proxies
+   */
   def getInventory = ZIO.accessM[Repository](_.get.getInventory)
   def placeOrder(id: Long, petId: Long, quantity: Int) = ZIO.accessM[Repository](_.get.placeOrder(id, petId, quantity))
   def getOrder(id: Long) = ZIO.accessM[Repository](_.get.getOrder(id))
@@ -35,6 +45,9 @@ package repository {
       def deleteOrder(id: Long): IO[DeleteOrderError, Unit]
     }
 
+    /**
+     * Simple in-memory implementation
+     */
     val inMemory = ZLayer.fromServices[Ref[Map[String, Int]], Ref[Map[Long, Order]], Service]((inventory, orders) =>
       new Service {
         def getInventory =  inventory.get

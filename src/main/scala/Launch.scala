@@ -6,7 +6,9 @@ import cats.effect.Timer
 
 object App extends App {
 
-  // An effect which, when executed, gives a StoreResource (capable of transforming a StoreHandler into something bindable)
+  /**
+   * An effect which, when executed, gives a StoreResource (capable of transforming a StoreHandler into something bindable)
+   */
   val makeStoreResource: RIO[repository.Repository, server.store.StoreResource[RIO[repository.Repository, *]]] = {
     import zio.interop.catz._
     ZIO.runtime[repository.Repository].map { implicit r: Runtime[repository.Repository] =>
@@ -14,6 +16,10 @@ object App extends App {
     }
   }
 
+  /**
+   * Breaking out bindServer to keep noise fairly self-contained. This could consume
+   * from some `Config` layer in order to access its port and host info.
+   */
   def bindServer[R](httpApp: cats.data.Kleisli[RIO[R, *],org.http4s.Request[RIO[R, *]],org.http4s.Response[RIO[R, *]]]): ZManaged[R, Throwable, org.http4s.server.Server[RIO[R, *]]] = {
     import zio.interop.catz._
     import zio.interop.catz.implicits._
@@ -40,17 +46,33 @@ object App extends App {
   }
 
 
-  // Our HTTP layer implementation, utilizing the Repository ZLayer
+  /**
+   * Our HTTP server implementation, utilizing the Repository Layer
+   */
   val handler: server.store.StoreHandler[ZIO[repository.Repository, Throwable, *]] =
     new server.store.StoreHandler[ZIO[repository.Repository, Throwable, *]] {
+
+      /**
+       * getInventory
+       *
+       * Just grab from the repository
+       *
+       * Since we do not have multiple conflicting layers, we can just catchAll at the end to map errors
+       */
       def getInventory(respond: GetInventoryResponse.type)(): zio.ZIO[repository.Repository,Nothing,GetInventoryResponse] = (
         for {
           inventory <- repository.getInventory
         } yield respond.Ok(inventory)
-      ).catchAll { // First strategy of error handling, just catchAll
+      ).catchAll {
         case repository.StockroomUnavailable => UIO(respond.InternalServerError("Stockroom unavailable, please try again later"))
       }
 
+      /**
+       * placeOrder
+       *
+       * Grabbing optional fields from an optional body, so we mapError explicitly on every line to give a different example of error handling
+       * repository.placeOrder also uses mapError, but translates from the repository error type into our error response.
+       */
       def placeOrder(respond: PlaceOrderResponse.type)(body: Option[example.server.definitions.Order]): zio.ZIO[repository.Repository,Nothing,PlaceOrderResponse] = (
         for {
           order <- ZIO.fromOption(body).mapError(_ => respond.MethodNotAllowed)
@@ -61,6 +83,12 @@ object App extends App {
         } yield respond.Ok(res)
       ).merge // Second strategy of error handling, mapError to PlaceOrderResponses, then merge them all together
 
+      /**
+       * getOrderById
+       *
+       * If we had a whole bunch of conflicting error types from various layers, it may be useful to define a bespoke
+       * error tree to keep the function body terse, without losing any specificity or totality in catchAll
+       */
       sealed trait GetOrderByIdDownstreamErrors
       final case class GOBIRepoError(error: repository.GetOrderError) extends GetOrderByIdDownstreamErrors
       def getOrderById(respond: GetOrderByIdResponse.type)(orderId: Long): zio.ZIO[repository.Repository,Nothing,GetOrderByIdResponse] = (
@@ -71,6 +99,12 @@ object App extends App {
         case GOBIRepoError(repository.UnknownOrder(id)) => UIO(respond.NotFound)
       }
 
+      /**
+       * deleteOrder
+       *
+       * The underlying repository function call can fail with different errors, so mapError
+       * those explicitly and use the .merge technique from placeOrder
+       */
       def deleteOrder(respond: DeleteOrderResponse.type)(orderId: Long): zio.ZIO[repository.Repository,Nothing,DeleteOrderResponse] = (
         for {
           () <- repository.deleteOrder(orderId).mapError {

@@ -49,8 +49,8 @@ object App extends App {
   /**
    * Our HTTP server implementation, utilizing the Repository Layer
    */
-  val handler: server.store.StoreHandler[ZIO[repository.Repository, Throwable, *]] =
-    new server.store.StoreHandler[ZIO[repository.Repository, Throwable, *]] {
+  val handler: server.store.StoreHandler[RIO[repository.Repository, *]] =
+    new server.store.StoreHandler[RIO[repository.Repository, *]] {
 
       /**
        * getInventory
@@ -59,7 +59,7 @@ object App extends App {
        *
        * Since we do not have multiple conflicting layers, we can just catchAll at the end to map errors
        */
-      def getInventory(respond: GetInventoryResponse.type)(): zio.ZIO[repository.Repository,Nothing,GetInventoryResponse] = (
+      def getInventory(respond: GetInventoryResponse.type)(): RIO[repository.Repository,GetInventoryResponse] = (
         for {
           inventory <- repository.getInventory
         } yield respond.Ok(inventory)
@@ -73,7 +73,7 @@ object App extends App {
        * Grabbing optional fields from an optional body, so we mapError explicitly on every line to give a different example of error handling
        * repository.placeOrder also uses mapError, but translates from the repository error type into our error response.
        */
-      def placeOrder(respond: PlaceOrderResponse.type)(body: Option[example.server.definitions.Order]): zio.ZIO[repository.Repository,Nothing,PlaceOrderResponse] = (
+      def placeOrder(respond: PlaceOrderResponse.type)(body: Option[example.server.definitions.Order]): RIO[repository.Repository,PlaceOrderResponse] = (
         for {
           order <- ZIO.fromOption(body).mapError(_ => respond.MethodNotAllowed)
           id <- ZIO.fromOption(order.id).mapError(_ => respond.MethodNotAllowed)
@@ -91,7 +91,7 @@ object App extends App {
        */
       sealed trait GetOrderByIdDownstreamErrors
       final case class GOBIRepoError(error: repository.GetOrderError) extends GetOrderByIdDownstreamErrors
-      def getOrderById(respond: GetOrderByIdResponse.type)(orderId: Long): zio.ZIO[repository.Repository,Nothing,GetOrderByIdResponse] = (
+      def getOrderById(respond: GetOrderByIdResponse.type)(orderId: Long): RIO[repository.Repository,GetOrderByIdResponse] = (
         for {
           order <- repository.getOrder(orderId).mapError(GOBIRepoError)
         } yield respond.Ok(order)
@@ -105,7 +105,7 @@ object App extends App {
        * The underlying repository function call can fail with different errors, so mapError
        * those explicitly and use the .merge technique from placeOrder
        */
-      def deleteOrder(respond: DeleteOrderResponse.type)(orderId: Long): zio.ZIO[repository.Repository,Nothing,DeleteOrderResponse] = (
+      def deleteOrder(respond: DeleteOrderResponse.type)(orderId: Long): RIO[repository.Repository,DeleteOrderResponse] = (
         for {
           () <- repository.deleteOrder(orderId).mapError {
             case repository.UnknownOrder(id) => respond.NotFound

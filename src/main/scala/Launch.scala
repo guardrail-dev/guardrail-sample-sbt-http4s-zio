@@ -7,7 +7,7 @@ import cats.effect.Timer
 object App extends App {
 
   // An effect which, when executed, gives a StoreResource (capable of transforming a StoreHandler into something bindable)
-  val resource: RIO[repository.Repository, server.store.StoreResource[RIO[repository.Repository, *]]] = {
+  val makeStoreResource: RIO[repository.Repository, server.store.StoreResource[RIO[repository.Repository, *]]] = {
     import zio.interop.catz._
     ZIO.runtime[repository.Repository].map { implicit r: Runtime[repository.Repository] =>
       new server.store.StoreResource[RIO[repository.Repository, *]]
@@ -85,14 +85,22 @@ object App extends App {
     import zio.interop.catz._
     import zio.interop.catz.implicits._
 
+    import org.http4s.HttpRoutes
     import org.http4s.implicits._
     import org.http4s.server.blaze.BlazeServerBuilder
+    type Z[A] = RIO[repository.Repository, A]
 
     ZIO.runtime[repository.Repository].flatMap { implicit r: Runtime[repository.Repository] =>
       for {
-        r <- resource
-        httpRoutes = r.routes(handler)
-        res <- bindServer(http4sKleisliResponseSyntaxOptionT[RIO[repository.Repository, *], org.http4s.Request[RIO[repository.Repository, *]]](httpRoutes).orNotFound).use(_ => ZIO.never)
+        storeResource <- makeStoreResource
+        // This is quite unpleasant.
+        // When using stable types, `Z` in this case, implicits resolve just fine, and we can use `.orNotFound` below.
+        // When using kind-projector, however, as in `HttpRoutes[RIO[repository.Repository, *]]`, resolution goes out
+        // the window and nothing can resolve unless explicitly pinned.
+        storeRoutes = storeResource.routes(handler): HttpRoutes[Z]
+        res <- bindServer(
+          storeRoutes.orNotFound
+        ).use(_ => ZIO.never)
       } yield res
     }
   }

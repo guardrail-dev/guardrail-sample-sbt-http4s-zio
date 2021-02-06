@@ -13,6 +13,9 @@ libraryDependencies ++= Seq(
   "dev.zio"          %% "zio-interop-cats"      % "2.2.0.1",
 )
 
+// Ensure canceling `run` releases socket, no matter what
+fork in run := true
+
 // Better syntax for dealing with partially-applied types
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full)
 

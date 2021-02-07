@@ -44,10 +44,10 @@ object App extends App {
        */
       def placeOrder(respond: PlaceOrderResponse.type)(body: Option[example.server.definitions.Order]): RIO[repository.Repository,PlaceOrderResponse] = (
         for {
-          order <- ZIO.fromOption(body).mapError(_ => respond.MethodNotAllowed)
-          id <- ZIO.fromOption(order.id).mapError(_ => respond.MethodNotAllowed)
-          petId <- ZIO.fromOption(order.petId).mapError(_ => respond.MethodNotAllowed)
-          quantity <- ZIO.fromOption(order.quantity).mapError(_ => respond.MethodNotAllowed)
+          order <- ZIO.fromOption(body).orElseFail(respond.MethodNotAllowed)
+          id <- ZIO.fromOption(order.id).orElseFail(respond.MethodNotAllowed)
+          petId <- ZIO.fromOption(order.petId).orElseFail(respond.MethodNotAllowed)
+          quantity <- ZIO.fromOption(order.quantity).orElseFail(respond.MethodNotAllowed)
           res <- repository.placeOrder(id, petId, quantity).mapError({ case repository.InsufficientQuantity(id) => respond.MethodNotAllowed }) // TODO: 405 isn't really applicable here
         } yield respond.Ok(res)
       ).merge // Second strategy of error handling, mapError to PlaceOrderResponses, then merge them all together

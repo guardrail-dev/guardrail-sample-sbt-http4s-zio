@@ -59,12 +59,12 @@ package repository {
 
         def getOrder(id: Long) = for {
           currentOrders <- orders.get
-          order <- ZIO.fromOption(currentOrders.get(id)).mapError(_ => UnknownOrder(id))
+          order <- ZIO.fromOption(currentOrders.get(id)).orElseFail(UnknownOrder(id))
         } yield order
         def deleteOrder(id: Long): zio.IO[DeleteOrderError,Unit] =
           for {
             order <- orders.modify(all => (all.get(id), all - id))
-            foundOrder <- ZIO.fromOption(order).mapError(_ => UnknownOrder(id))
+            foundOrder <- ZIO.fromOption(order).orElseFail(UnknownOrder(id))
           } yield ()
       }
     )

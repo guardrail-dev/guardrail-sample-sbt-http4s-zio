@@ -2,6 +2,9 @@ package example
 
 import zio._
 
+sealed trait GetOrderByIdDownstreamErrors
+final case class GOBIRepoError(error: repository.GetOrderError) extends GetOrderByIdDownstreamErrors
+
 object App extends App {
 
   /**
@@ -58,8 +61,6 @@ object App extends App {
        * If we had a whole bunch of conflicting error types from various layers, it may be useful to define a bespoke
        * error tree to keep the function body terse, without losing any specificity or totality in catchAll
        */
-      sealed trait GetOrderByIdDownstreamErrors
-      final case class GOBIRepoError(error: repository.GetOrderError) extends GetOrderByIdDownstreamErrors
       def getOrderById(respond: GetOrderByIdResponse.type)(orderId: Long): RIO[repository.Repository,GetOrderByIdResponse] = (
         for {
           order <- repository.getOrder(orderId).mapError(GOBIRepoError)

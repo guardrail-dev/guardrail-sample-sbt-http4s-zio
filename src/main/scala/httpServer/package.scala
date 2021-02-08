@@ -52,16 +52,11 @@ package httpServer {
         import org.http4s.implicits._
         import org.http4s.server.blaze.BlazeServerBuilder
 
-        type Z[A] = RIO[R, A]
 
         ZIO.runtime[R].flatMap { implicit r: Runtime[R] =>
           for {
             res <- bindServer(
-              // This is quite unpleasant.
-              // When using stable types, `Z` in this case, implicits resolve just fine, and we can use `.orNotFound` below.
-              // When using kind-projector, however, as in `HttpRoutes[RIO[R, *]]`, resolution goes out
-              // the window and nothing can resolve unless explicitly pinned.
-              (httpRoutes: HttpRoutes[Z]).orNotFound
+              httpRoutes.orNotFound
             ).use(_ => ZIO.never)
           } yield res
         }

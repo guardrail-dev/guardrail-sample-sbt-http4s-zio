@@ -36,3 +36,5 @@ guardrailTasks in Compile := List(
 guardrailTasks in Test := List(
   ScalaClient(file("server.yaml"), pkg="example.client", framework="http4s"),
 )
+
+scalacOptions ++= (if (scalaVersion.value.startsWith("2.12")) Seq("-Ypartial-unification") else Nil)

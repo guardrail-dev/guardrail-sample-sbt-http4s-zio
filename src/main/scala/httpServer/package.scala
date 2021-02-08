@@ -36,7 +36,7 @@ package httpServer {
         ZIO.runtime
           .toManaged_
           .flatMap { implicit r: Runtime[R] =>
-            BlazeServerBuilder[RIO[R, *]]
+            BlazeServerBuilder[RIO[R, *]](scala.concurrent.ExecutionContext.global)
               .bindHttp(8080, "localhost")
               .withHttpApp(httpApp)
               .resource

@@ -1,6 +1,11 @@
 name := "guardrail-sample-http4s-zio"
 organization := "se.hardchee"
 
+scalaVersion := "2.13.4"
+
+// Just for show
+crossScalaVersions := Seq("2.12.13", "2.13.4")
+
 libraryDependencies ++= Seq(
   // Depend on http4s, which will pull in cats and circe
   "org.http4s"       %% "http4s-blaze-client"   % "0.21.18",

@@ -46,20 +46,10 @@ package httpServer {
 
       def serveForever[R](httpRoutes: org.http4s.HttpRoutes[RIO[R, *]]): RIO[R, Nothing] = {
         import zio.interop.catz._
-        import zio.interop.catz.implicits._
-
-        import org.http4s.HttpRoutes
         import org.http4s.implicits._
-        import org.http4s.server.blaze.BlazeServerBuilder
 
-
-        ZIO.runtime[R].flatMap { implicit r: Runtime[R] =>
-          for {
-            res <- bindServer(
-              httpRoutes.orNotFound
-            ).use(_ => ZIO.never)
-          } yield res
-        }
+        bindServer(httpRoutes.orNotFound)
+          .use(_ => ZIO.never)
       }
     })
   }

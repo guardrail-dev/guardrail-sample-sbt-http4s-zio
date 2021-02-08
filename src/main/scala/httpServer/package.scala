@@ -5,13 +5,13 @@ import zio._
 package object httpServer {
   type HttpServer = Has[HttpServer.Service]
 
-  def serveForever[R](httpRoutes: org.http4s.HttpRoutes[RIO[R, *]]) = ZIO.accessM[HttpServer with R](_.get.serveForever(httpRoutes))
+  def bindServer[R](httpApp: org.http4s.Http[RIO[R, *], RIO[R, *]]) = ZIO.access[HttpServer with R](_.get.bindServer(httpApp))
 }
 
 package httpServer {
   object HttpServer {
     trait Service {
-      def serveForever[R](httpRoutes: org.http4s.HttpRoutes[RIO[R, *]]): RIO[R, Nothing]
+      def bindServer[R](httpApp: org.http4s.Http[RIO[R, *], RIO[R, *]]): ZManaged[R, Throwable, org.http4s.server.Server[RIO[R, *]]]
     }
 
     val live: ULayer[HttpServer] = ZLayer.succeed(new Service {
@@ -19,7 +19,7 @@ package httpServer {
        * Breaking out bindServer to keep noise fairly self-contained. This could consume
        * from some `Config` layer in order to access its port and host info.
        */
-      def bindServer[R](httpApp: cats.data.Kleisli[RIO[R, *],org.http4s.Request[RIO[R, *]],org.http4s.Response[RIO[R, *]]]): ZManaged[R, Throwable, org.http4s.server.Server[RIO[R, *]]] = {
+      def bindServer[R](httpApp: org.http4s.Http[RIO[R, *], RIO[R, *]]): ZManaged[R, Throwable, org.http4s.server.Server[RIO[R, *]]] = {
         import zio.interop.catz._
         import zio.interop.catz.implicits._
 
@@ -42,14 +42,6 @@ package httpServer {
               .resource
               .toManagedZIO
           }
-      }
-
-      def serveForever[R](httpRoutes: org.http4s.HttpRoutes[RIO[R, *]]): RIO[R, Nothing] = {
-        import zio.interop.catz._
-        import org.http4s.implicits._
-
-        bindServer(httpRoutes.orNotFound)
-          .use(_ => ZIO.never)
       }
     })
   }

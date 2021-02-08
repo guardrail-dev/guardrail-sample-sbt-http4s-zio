@@ -96,11 +96,23 @@ object App extends App {
       123L -> Order(id = Some(123L), petId = Some(5L), quantity = Some(3), status = Some(Order.Status.Placed))
     )
 
+    val combineRoutes = {
+      import zio.interop.catz._
+
+      import cats.syntax.all._
+      import org.http4s.implicits._
+
+      for {
+        storeResource <- makeStoreResource
+      } yield storeResource.routes(handler).orNotFound
+    }
+
     val inventoryLayer = Ref.make(initialInventory).toManaged_.toLayer
     val ordersLayer = Ref.make(initialOrders).toManaged_.toLayer
     (for {
-      storeResource <- makeStoreResource
-      res <- httpServer.serveForever(storeResource.routes(handler))
+      combinedRoutes <- combineRoutes
+      binding <- httpServer.bindServer(combinedRoutes)
+      res <- binding.use(_ => ZIO.never)
     } yield res)
       .exitCode
       .provideSomeLayer[ZEnv with httpServer.HttpServer]((inventoryLayer ++ ordersLayer) >>> repository.Repository.inMemory)

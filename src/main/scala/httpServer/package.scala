@@ -31,7 +31,7 @@ package httpServer {
         import org.http4s.server.blaze.BlazeServerBuilder
 
         // Pardon the asInstanceOf, ioTimer has no way to inject R
-        implicit val timer: cats.effect.Timer[RIO[R, *]] = ioTimer[Throwable].asInstanceOf[cats.effect.Timer[RIO[R, *]]]
+        implicit val timer: cats.effect.Timer[RIO[R, *]] = ioTimer[R, Throwable]
 
         ZIO.runtime
           .toManaged_

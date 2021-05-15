@@ -22,7 +22,7 @@ libraryDependencies ++= Seq(
 run / fork := true
 
 // Better syntax for dealing with partially-applied types
-addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full)
+addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full)
 
 // Better semantics for for comprehensions
 addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")

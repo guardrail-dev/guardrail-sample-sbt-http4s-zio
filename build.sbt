@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
   "org.http4s"       %% "http4s-dsl"            % "0.21.22",
 
   // ZIO and the interop library
-  "dev.zio"          %% "zio"                   % "1.0.7",
+  "dev.zio"          %% "zio"                   % "1.0.8",
   "dev.zio"          %% "zio-interop-cats"      % "3.0.2.0",
 )
 

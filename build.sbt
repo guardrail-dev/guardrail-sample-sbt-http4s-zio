@@ -15,7 +15,7 @@ libraryDependencies ++= Seq(
 
   // ZIO and the interop library
   "dev.zio"          %% "zio"                   % "1.0.7",
-  "dev.zio"          %% "zio-interop-cats"      % "3.0.2.0",
+  "dev.zio"          %% "zio-interop-cats"      % "3.1.1.0",
 )
 
 // Ensure canceling `run` releases socket, no matter what

@@ -8,18 +8,18 @@ crossScalaVersions := Seq("2.12.13", "2.13.5")
 
 libraryDependencies ++= Seq(
   // Depend on http4s, which will pull in cats and circe
-  "org.http4s"       %% "http4s-blaze-client"   % "0.21.22",
-  "org.http4s"       %% "http4s-blaze-server"   % "0.21.22",
+  "org.http4s"       %% "http4s-ember-client"   % "0.21.22",
+  "org.http4s"       %% "http4s-ember-server"   % "0.21.22",
   "org.http4s"       %% "http4s-circe"          % "0.21.22",
   "org.http4s"       %% "http4s-dsl"            % "0.21.22",
 
   // ZIO and the interop library
   "dev.zio"          %% "zio"                   % "1.0.7",
-  "dev.zio"          %% "zio-interop-cats"      % "3.0.2.0",
+  "dev.zio"          %% "zio-interop-cats"      % "2.4.1.0",
 )
 
 // Ensure canceling `run` releases socket, no matter what
-fork in run := true
+run / fork := true
 
 // Better syntax for dealing with partially-applied types
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full)
@@ -28,12 +28,12 @@ addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVers
 addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
 
 // Server config
-guardrailTasks in Compile := List(
+Compile / guardrailTasks := List(
   ScalaServer(file("server.yaml"), pkg="example.server", framework="http4s"),
 )
 
 // Client config for tests
-guardrailTasks in Test := List(
+Test / guardrailTasks := List(
   ScalaClient(file("server.yaml"), pkg="example.client", framework="http4s"),
 )
 

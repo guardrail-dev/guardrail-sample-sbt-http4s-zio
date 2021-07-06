@@ -4,7 +4,7 @@ organization := "se.hardchee"
 scalaVersion := "2.13.6"
 
 // Just for show
-crossScalaVersions := Seq("2.12.13", "2.13.6")
+crossScalaVersions := Seq("2.12.14", "2.13.6")
 
 libraryDependencies ++= Seq(
   // Depend on http4s, which will pull in cats and circe

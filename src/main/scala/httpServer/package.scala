@@ -28,7 +28,7 @@ package httpServer {
         import org.http4s._
         import org.http4s.dsl.io._
         import org.http4s.implicits._
-        import org.http4s.server.blaze.BlazeServerBuilder
+        import org.http4s.ember.server.EmberServerBuilder
 
         // Pardon the asInstanceOf, ioTimer has no way to inject R
         implicit val timer: Timer[RIO[R, *]] = ioTimer[R, Throwable]
@@ -36,10 +36,9 @@ package httpServer {
         ZIO.runtime
           .toManaged_
           .flatMap { implicit r: Runtime[R] =>
-            BlazeServerBuilder[RIO[R, *]](scala.concurrent.ExecutionContext.global)
-              .bindHttp(8080, "localhost")
+            EmberServerBuilder.default[RIO[R, *]]
               .withHttpApp(httpApp)
-              .resource
+              .build
               .toManagedZIO
           }
       }

@@ -19,7 +19,7 @@ libraryDependencies ++= Seq(
 )
 
 // Ensure canceling `run` releases socket, no matter what
-fork in run := true
+run / fork := true
 
 // Better syntax for dealing with partially-applied types
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full)
@@ -28,12 +28,12 @@ addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVers
 addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
 
 // Server config
-guardrailTasks in Compile := List(
+Compile / guardrailTasks := List(
   ScalaServer(file("server.yaml"), pkg="example.server", framework="http4s"),
 )
 
 // Client config for tests
-guardrailTasks in Test := List(
+Test / guardrailTasks := List(
   ScalaClient(file("server.yaml"), pkg="example.client", framework="http4s"),
 )
 

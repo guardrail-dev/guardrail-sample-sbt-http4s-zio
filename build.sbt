@@ -8,10 +8,10 @@ crossScalaVersions := Seq("2.12.13", "2.13.6")
 
 libraryDependencies ++= Seq(
   // Depend on http4s, which will pull in cats and circe
-  "org.http4s"       %% "http4s-ember-client"   % "0.21.22",
-  "org.http4s"       %% "http4s-ember-server"   % "0.21.22",
-  "org.http4s"       %% "http4s-circe"          % "0.21.22",
-  "org.http4s"       %% "http4s-dsl"            % "0.21.22",
+  "org.http4s"       %% "http4s-ember-client"   % "0.21.24",
+  "org.http4s"       %% "http4s-ember-server"   % "0.21.24",
+  "org.http4s"       %% "http4s-circe"          % "0.21.24",
+  "org.http4s"       %% "http4s-dsl"            % "0.21.24",
 
   // ZIO and the interop library
   "dev.zio"          %% "zio"                   % "1.0.7",

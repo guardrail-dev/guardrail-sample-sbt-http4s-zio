@@ -34,4 +34,4 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-scala-${{ matrix.scala.version }}-
     - name: Run tests
-      run:  sbt ++${{ matrix.scala.version }} clean test:compile
+      run:  sbt ++${{ matrix.scala.version }} clean test

@@ -5,7 +5,7 @@ import zio._
 sealed trait GetOrderByIdDownstreamErrors
 final case class GOBIRepoError(error: repository.GetOrderError) extends GetOrderByIdDownstreamErrors
 
-object App extends App {
+object Controller {
 
   /**
    * An effect which, when executed, gives a StoreResource (capable of transforming a StoreHandler into something bindable)
@@ -85,37 +85,39 @@ object App extends App {
       ).merge
     }
 
-  def run(args: List[String]) = {
-    import example.server.definitions.Order
-    val initialInventory = Map(
-      "Kibble" -> 10,
-      "Treats" -> 3
-    )
+  import example.server.definitions.Order
+  val initialInventory = Map(
+    "Kibble" -> 10,
+    "Treats" -> 3
+  )
+  val inventoryLayer = Ref.make(initialInventory).toManaged_.toLayer
 
-    val initialOrders = Map(
-      123L -> Order(id = Some(123L), petId = Some(5L), quantity = Some(3), status = Some(Order.Status.Placed))
-    )
+  val initialOrders = Map(
+    123L -> Order(id = Some(123L), petId = Some(5L), quantity = Some(3), status = Some(Order.Status.Placed))
+  )
+  val ordersLayer = Ref.make(initialOrders).toManaged_.toLayer
 
-    val combineRoutes = {
-      import zio.interop.catz._
+  val combineRoutes = {
+    import zio.interop.catz._
 
-      import cats.syntax.all._
-      import org.http4s.implicits._
+    import cats.syntax.all._
+    import org.http4s.implicits._
 
-      for {
-        storeResource <- makeStoreResource
-      } yield storeResource.routes(handler).orNotFound
-    }
+    for {
+      storeResource <- makeStoreResource
+    } yield storeResource.routes(handler).orNotFound
+  }
 
-    val inventoryLayer = Ref.make(initialInventory).toManaged_.toLayer
-    val ordersLayer = Ref.make(initialOrders).toManaged_.toLayer
-    (for {
+  val inMemoryLayer = (inventoryLayer ++ ordersLayer) >>> repository.Repository.inMemory
+
+  val prog =
+    for {
       combinedRoutes <- combineRoutes
       binding <- httpServer.bindServer(combinedRoutes)
       res <- binding.use(_ => ZIO.never)
-    } yield res)
-      .exitCode
-      .provideSomeLayer[ZEnv with httpServer.HttpServer]((inventoryLayer ++ ordersLayer) >>> repository.Repository.inMemory)
-      .provideSomeLayer[ZEnv](httpServer.HttpServer.live)
-  }
+    } yield res
+
+  val inMemoryProg =
+    prog
+      .provideSomeLayer[ZEnv with httpServer.HttpServer](inMemoryLayer)
 }

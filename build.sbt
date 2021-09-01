@@ -8,10 +8,10 @@ ThisBuild / crossScalaVersions := Seq("2.12.14", "2.13.6")
 
 val commonDependencies = Seq(
   // Depend on http4s-managed cats and circe
-  "org.http4s"       %% "http4s-ember-client"   % "0.21.24",
-  "org.http4s"       %% "http4s-ember-server"   % "0.21.24",
-  "org.http4s"       %% "http4s-circe"          % "0.21.24",
-  "org.http4s"       %% "http4s-dsl"            % "0.21.24",
+  "org.http4s"       %% "http4s-ember-client"   % "0.21.27",
+  "org.http4s"       %% "http4s-ember-server"   % "0.21.27",
+  "org.http4s"       %% "http4s-circe"          % "0.21.27",
+  "org.http4s"       %% "http4s-dsl"            % "0.21.27",
 
   // ZIO and the interop library
   "dev.zio"          %% "zio"                   % "1.0.9",

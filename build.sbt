@@ -4,7 +4,7 @@ ThisBuild / organization := "se.hardchee"
 ThisBuild / scalaVersion := "2.13.6"
 
 // Convenience for cross-compat testing
-ThisBuild / crossScalaVersions := Seq("2.12.14", "2.13.6")
+ThisBuild / crossScalaVersions := Seq("2.12.16", "2.13.6")
 
 val commonDependencies = Seq(
   // Depend on http4s-managed cats and circe

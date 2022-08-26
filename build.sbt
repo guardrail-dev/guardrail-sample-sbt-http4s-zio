@@ -1,23 +1,32 @@
+
+val Versions = new {
+  val Http4s = "0.23.14"
+  val Zio = "2.0.0"
+  val ZioCatsInterop = "3.3.0"
+}
+
+
 name := "guardrail-sample-http4s-zio"
 ThisBuild / organization := "se.hardchee"
 
-ThisBuild / scalaVersion := "2.13.6"
+ThisBuild / scalaVersion := "3.1.3"
 
 // Convenience for cross-compat testing
-ThisBuild / crossScalaVersions := Seq("2.12.14", "2.13.6")
+//ThisBuild / crossScalaVersions := Seq("2.12.14", "2.13.6")
 
 val commonDependencies = Seq(
   // Depend on http4s-managed cats and circe
-  "org.http4s"       %% "http4s-ember-client"   % "0.21.24",
-  "org.http4s"       %% "http4s-ember-server"   % "0.21.24",
-  "org.http4s"       %% "http4s-circe"          % "0.21.24",
-  "org.http4s"       %% "http4s-dsl"            % "0.21.24",
+  "org.http4s" %% "http4s-armeria-server" % "0.5.0",
+  "org.http4s" %% "http4s-armeria-client" % "0.5.0",
+  "org.http4s" %% "http4s-circe" % Versions.Http4s,
+  "org.http4s" %% "http4s-dsl" % Versions.Http4s,
+  "dev.zio" %% "zio-logging-slf4j" % Versions.Zio,
 
   // ZIO and the interop library
-  "dev.zio"          %% "zio"                   % "1.0.9",
-  "dev.zio"          %% "zio-interop-cats"      % "2.5.1.0",
-  "dev.zio"          %% "zio-test"              % "1.0.9" % "test",
-  "dev.zio"          %% "zio-test-sbt"          % "1.0.9" % "test",
+  "dev.zio" %% "zio" % Versions.Zio,
+  "dev.zio" %% "zio-interop-cats" % Versions.ZioCatsInterop,
+  "dev.zio" %% "zio-test" % Versions.Zio % "test",
+  "dev.zio" %% "zio-test-sbt" % Versions.Zio % "test",
 )
 
 val commonSettings = Seq(
@@ -30,16 +39,16 @@ val commonSettings = Seq(
   run / fork := true,
 
   // Better syntax for dealing with partially-applied types
-  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full),
+//  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full),
 
   // Better semantics for for comprehensions
-  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
+//  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
 )
 
 lazy val exampleServer = (project in file("example-server"))
   .settings(commonSettings)
   .settings(
-    Compile / guardrailTasks += ScalaServer(file("server.yaml"), pkg="example.server", framework="http4s"),
+    Compile / guardrailTasks += ScalaServer(file("server.yaml"), pkg = "example.server", framework = "http4s"),
     libraryDependencies ++= commonDependencies
   )
   .dependsOn(exampleClient % "test")
@@ -47,7 +56,7 @@ lazy val exampleServer = (project in file("example-server"))
 lazy val exampleClient = (project in file("example-client"))
   .settings(commonSettings)
   .settings(
-    Compile / guardrailTasks += ScalaClient(file("server.yaml"), pkg="example.client", framework="http4s"),
+    Compile / guardrailTasks += ScalaClient(file("server.yaml"), pkg = "example.client", framework = "http4s"),
     libraryDependencies ++= commonDependencies
   )
 

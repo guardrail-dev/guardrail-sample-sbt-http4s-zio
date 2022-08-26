@@ -35,7 +35,7 @@ object RoundTripSpec extends DefaultRunnableSpec {
 
   val buildStaticClient = for {
     combinedRoutes <- Controller.combineRoutes
-  } yield StoreClient.httpClient(Client.fromHttpApp[RIO[Repository, *]](combinedRoutes), "http://localhost")
+  } yield StoreClient.httpClient(Client.fromHttpApp[RIO[Repository.Service, *]](combinedRoutes), "http://localhost")
 
   def spec = suite("RoundTripSpec")(
     /**

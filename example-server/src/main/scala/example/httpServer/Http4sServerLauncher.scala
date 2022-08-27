@@ -5,15 +5,15 @@ import example.AppRoutes
 import example.Launch.ApplicationConfig
 import org.http4s.HttpApp
 import org.http4s.armeria.server.ArmeriaServerBuilder
-import org.http4s.server.Server
+import org.http4s.server.{Server, defaults}
 import zio.*
 import zio.interop.catz.*
 import zio.interop.catz.implicits.*
 
 object Http4sServerLauncher {
-  def apply(routes: HttpApp[Task], atPort: Int): ZIO[Any & Scope, Throwable, Server] =
+  def apply(routes: HttpApp[Task], atPort: Option[Int]): ZIO[Any & Scope, Throwable, Server] =
     ArmeriaServerBuilder[Task]
-      .bindHttp(atPort)
+      .bindHttp(atPort.fold(0)(identity))
       .withHttpApp("/", routes)
       .resource.toScopedZIO
 
@@ -21,7 +21,7 @@ object Http4sServerLauncher {
     for {
       config <- ZIO.service[ApplicationConfig]
       routes <- ZIO.service[AppRoutes]
-      x <- apply(routes.handler, config.port)
+      x <- apply(routes.handler, Option(config.port))
     } yield x
   }
 

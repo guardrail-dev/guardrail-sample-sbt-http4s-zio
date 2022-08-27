@@ -2,6 +2,7 @@ package example
 
 import example.httpServer.Http4sServerLauncher
 import example.repository.RepositoryService
+import org.http4s.server.Server
 import zio.logging.backend.SLF4J
 import zio.{ExitCode, LogLevel, Runtime, Scope, ZIO, ZIOAppArgs, ZLayer}
 
@@ -13,13 +14,13 @@ object Launch extends zio.ZIOAppDefault {
 
   def runWithConfig(config: ApplicationConfig): ZIO[Any with Scope, Throwable, Unit] = {
 
-    val action: ZIO[AppRoutes & Scope, Throwable, Unit] = for {
-      appRoutes <- ZIO.service[AppRoutes]
-      _ <- Http4sServerLauncher(appRoutes.handler, config.port)
+    val action: ZIO[Server, Nothing, Unit] = for {
+      appRoutes <- ZIO.service[Server]
     } yield ()
 
-
     action.provideSome[Scope](
+      ZLayer.succeed(config),
+      Http4sServerLauncher.live,
       AppRoutes.live,
       StoreController.live,
       RepositoryService.live

@@ -3,11 +3,16 @@ package example.repository
 import example.server.definitions.Order
 import zio.{IO, Ref, UIO, ZIO, ZLayer}
 
-enum GetInventoryError:
-  case StockroomUnavailable
+sealed trait GetInventoryError
 
-enum PlaceOrderError:
-  case InsufficientQuantity(id: Long)
+object GetInventoryError {
+  case object StockroomUnavailable extends GetInventoryError
+}
+
+sealed trait PlaceOrderError
+object PlaceOrderError {
+  case class InsufficientQuantity(id: Long) extends PlaceOrderError
+}
 
 case class UnknownOrder(id: Long)
 
@@ -37,16 +42,16 @@ case class InMemoryRepositoryService(inventory: Ref[Map[String, Int]], orders: R
     }
 
   override def getOrder(id: Long): IO[UnknownOrder, Order] =
-    for
+    for {
       currentOrders <- orders.get
       order <- ZIO.fromOption(currentOrders.get(id)).orElseFail(UnknownOrder(id))
-    yield order
+    } yield order
 
   override def deleteOrder(id: Long): IO[AlreadyDeleted | UnknownOrder, Unit] =
-    for
+    for {
       order <- orders.modify(all => (all.get(id), all - id))
       foundOrder <- ZIO.fromOption(order).orElseFail(UnknownOrder(id))
-    yield ()
+    } yield ()
 
 }
 
@@ -59,9 +64,9 @@ object RepositoryService {
   )
 
   val live: ZLayer[Any, Nothing, RepositoryService] = ZLayer {
-    for
+    for {
       inventory <- zio.Ref.make[Map[String, Int]](initialInventory)
       orders <- zio.Ref.make[Map[Long, Order]](initialOrders)
-    yield InMemoryRepositoryService(inventory, orders)
+    } yield InMemoryRepositoryService(inventory, orders)
   }
 }

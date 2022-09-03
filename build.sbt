@@ -11,8 +11,7 @@ ThisBuild / organization := "se.hardchee"
 
 ThisBuild / scalaVersion := "3.1.3"
 
-// Convenience for cross-compat testing
-//ThisBuild / crossScalaVersions := Seq("2.12.14", "2.13.6")
+ThisBuild / crossScalaVersions := Seq("2.12.14", "2.13.6", "3.1.3")
 
 val commonDependencies = Seq(
   // Depend on http4s-managed cats and circe
@@ -39,10 +38,18 @@ val commonSettings = Seq(
   run / fork := true,
 
   // Better syntax for dealing with partially-applied types
-//  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full),
+  libraryDependencies ++= {
+    scalaVersion.value match {
+      case v if v.startsWith("3") =>
+        Nil
+      case _ =>
+        List(
+          compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full),
+          compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
+        )
+    }
+  }
 
-  // Better semantics for for comprehensions
-//  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
 )
 
 lazy val exampleServer = (project in file("example-server"))

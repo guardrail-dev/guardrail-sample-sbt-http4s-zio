@@ -6,8 +6,11 @@ import example.server.store.StoreHandler
 import example.server.store.StoreResource.{DeleteOrderResponse, GetInventoryResponse, GetOrderByIdResponse, PlaceOrderResponse}
 import zio.*
 
-enum GetOrderByIdDownstreamErrors:
-  case GOBIRepoError(error: UnknownOrder) extends GetOrderByIdDownstreamErrors
+sealed trait GetOrderByIdDownstreamErrors
+
+object GetOrderByIdDownstreamErrors {
+  case class GOBIRepoError(error: UnknownOrder) extends GetOrderByIdDownstreamErrors
+}
 
 case class LiveStoreController(service: RepositoryService) extends StoreHandler[Task] {
 

@@ -22,9 +22,7 @@ case class LiveStoreController(service: RepositoryService) extends StoreHandler[
    * Since we do not have multiple conflicting layers, we can just catchAll at the end to map errors
    */
   def getInventory(respond: GetInventoryResponse.type)(): Task[GetInventoryResponse] = {
-    val action: ZIO[Any, GetInventoryError, GetInventoryResponse.Ok] = for {
-      inventory <- service.getInventory
-    } yield respond.Ok(inventory)
+    val action: ZIO[Any, GetInventoryError, GetInventoryResponse.Ok] = for inventory <- service.getInventory yield respond.Ok(inventory)
 
     action.catchAll {
       case GetInventoryError.StockroomUnavailable => ZIO.succeed(respond.InternalServerError("Stockroom unavailable, please try again later"))
@@ -38,7 +36,7 @@ case class LiveStoreController(service: RepositoryService) extends StoreHandler[
    * repository.placeOrder also uses mapError, but translates from the repository error type into our error response.
    */
   def placeOrder(respond: PlaceOrderResponse.type)(body: Option[Order]): Task[PlaceOrderResponse] = {
-    val action = for {
+    val action = for
       order <- ZIO.fromOption(body).orElseFail(respond.MethodNotAllowed)
       id <- ZIO.fromOption(order.id).orElseFail(respond.MethodNotAllowed)
       petId <- ZIO.fromOption(order.petId).orElseFail(respond.MethodNotAllowed)
@@ -46,7 +44,7 @@ case class LiveStoreController(service: RepositoryService) extends StoreHandler[
       res <- service.placeOrder(id, petId, quantity).mapError {
         case PlaceOrderError.InsufficientQuantity(id) => respond.MethodNotAllowed
       } // TODO: 405 isn't really applicable here
-    } yield respond.Ok(res)
+    yield respond.Ok(res)
 
     action.merge // Second strategy of error handling, mapError to PlaceOrderResponses, then merge them all together
   }
@@ -75,12 +73,12 @@ case class LiveStoreController(service: RepositoryService) extends StoreHandler[
    * those explicitly and use the .merge technique from placeOrder
    */
   def deleteOrder(respond: DeleteOrderResponse.type)(orderId: Long): Task[DeleteOrderResponse] = {
-    val action = for {
+    val action = for
       _ <- service.deleteOrder(orderId).mapError {
         case repository.UnknownOrder(id) => respond.NotFound
         case repository.AlreadyDeleted(id) => respond.BadRequest
       }
-    } yield respond.Accepted
+    yield respond.Accepted
 
     action.merge
   }

@@ -13,10 +13,7 @@ object Launch extends zio.ZIOAppDefault {
   case class ApplicationConfig(inMemory: Boolean, port: Int)
 
   def runWithConfig(config: ApplicationConfig): ZIO[Any with Scope, Throwable, Unit] = {
-
-    val action: ZIO[Server, Nothing, Unit] = for {
-      appRoutes <- ZIO.service[Server]
-    } yield ()
+    val action: ZIO[Server, Nothing, Unit] = for appRoutes <- ZIO.service[Server] yield ()
 
     action.provideSome[Scope](
       ZLayer.succeed(config),

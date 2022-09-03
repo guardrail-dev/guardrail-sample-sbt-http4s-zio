@@ -12,10 +12,10 @@ trait AppRoutes {
 
 final case class LiveAppRoutes(storeHandler: StoreHandler[Task]) extends AppRoutes {
 
-  override def handler: HttpApp[Task] = {
+  override def handler: HttpApp[Task] =
     val routes = (new StoreResource[Task]).routes(storeHandler)
     routes.orNotFound
-  }
+  
 }
 
 object AppRoutes {

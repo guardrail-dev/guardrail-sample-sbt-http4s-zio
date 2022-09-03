@@ -18,11 +18,11 @@ object Http4sServerLauncher {
       .resource.toScopedZIO
 
   val live: ZLayer[AppRoutes with ApplicationConfig with Scope, Throwable, Server] = ZLayer {
-    for {
+    for
       config <- ZIO.service[ApplicationConfig]
       routes <- ZIO.service[AppRoutes]
-      x <- apply(routes.handler, Option(config.port))
-    } yield x
+      server <- apply(routes.handler, Option(config.port))
+    yield server
   }
 
 }

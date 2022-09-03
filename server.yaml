@@ -36,6 +36,7 @@ paths:
     get:
       description: Returns a map of status codes to quantities
       operationId: getInventory
+      x-jvm-package: store
       responses:
         '200':
           content:
@@ -61,6 +62,7 @@ paths:
     post:
       description: Place a new order in the store
       operationId: placeOrder
+      x-jvm-package: store
       requestBody:
         content:
           application/json:
@@ -89,6 +91,7 @@ paths:
       description: For valid response try integer IDs with value < 1000. Anything
         above 1000 or nonintegers will generate API errors
       operationId: deleteOrder
+      x-jvm-package: store
       parameters:
       - description: ID of the order that needs to be deleted
         in: path
@@ -111,6 +114,7 @@ paths:
       description: For valid response try integer IDs with value <= 5 or > 10. Other
         values will generated exceptions
       operationId: getOrderById
+      x-jvm-package: store
       parameters:
       - description: ID of order that needs to be fetched
         in: path

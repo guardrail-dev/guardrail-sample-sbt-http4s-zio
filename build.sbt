@@ -1,10 +1,10 @@
 name := "guardrail-sample-http4s-zio"
 ThisBuild / organization := "se.hardchee"
 
-ThisBuild / scalaVersion := "2.13.6"
+ThisBuild / scalaVersion := "2.13.13"
 
 // Convenience for cross-compat testing
-ThisBuild / crossScalaVersions := Seq("2.12.14", "2.13.6")
+ThisBuild / crossScalaVersions := Seq("2.12.14", "2.13.13")
 
 val commonDependencies = Seq(
   // Depend on http4s-managed cats and circe
